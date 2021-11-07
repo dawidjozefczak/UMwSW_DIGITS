@@ -16,7 +16,7 @@ img_height=208
 batch_size = 32
 
 #change in your OS - main set of images
-data_dir = "C:/Polibuda/IX/Uczenie_maszynowe/Lets_try/UMwSW_Projekt_Balawajder_Jeske_pliki/classes"
+data_dir = "/home/dawid/Documents/Politechnika-mgr/Uczenie maszynowe w systemach wizyjnych/projekt/UMwSW_DIGITS/classes"
 
 def crop(image, left, top, right, bottom):
     cropped = image.crop((left, top, right, bottom))
