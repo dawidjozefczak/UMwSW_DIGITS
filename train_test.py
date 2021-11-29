@@ -10,48 +10,49 @@ from tensorflow.keras.models import Sequential
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 img_width=112
 img_height=208
 batch_size = 32
 
 #change in your OS - main set of images
-data_dir = "/home/dawid/Documents/Politechnika-mgr/Uczenie maszynowe w systemach wizyjnych/projekt/UMwSW_DIGITS/classes"
+data_dir = "/home/dawid/Documents/Politechnika-mgr/Uczenie_maszynowe_w_systemach_wizyjnych/UMwSW_DIGITS/classes"
 
-def crop(image, left, top, right, bottom):
-    cropped = image.crop((left, top, right, bottom))
-    return cropped
+# def crop(image, left, top, right, bottom):
+#     cropped = image.crop((left, top, right, bottom))
+#     return cropped
 
-def getFileNameNoExtension(image, path):
-    if(len(path)>0):
-        fileName = image.filename[len(path)+1:-4]
-    else:
-        fileName = image.filename[0:-4]
-    return fileName
+# def getFileNameNoExtension(image, path):
+#     if(len(path)>0):
+#         fileName = image.filename[len(path)+1:-4]
+#     else:
+#         fileName = image.filename[0:-4]
+#     return fileName
 
-def nameCroppedImage(name, letter):
-    ext = ".png"
-    newName = name + letter + ext
-    return newName
+# def nameCroppedImage(name, letter):
+#     ext = ".png"
+#     newName = name + letter + ext
+#     return newName
 
-def openFolder(path):
-    image_list = []
-    for filename in glob.glob(path + '/*.png'):
-        im=Image.open(filename)
-        image_list.append(im)
-    for filename in glob.glob(path + '/*.jpg'):
-        im=Image.open(filename)
-        image_list.append(im)
+# def openFolder(path):
+#     image_list = []
+#     for filename in glob.glob(path + '/*.png'):
+#         im=Image.open(filename)
+#         image_list.append(im)
+#     for filename in glob.glob(path + '/*.jpg'):
+#         im=Image.open(filename)
+#         image_list.append(im)
 
-    return image_list
+#     return image_list
 
-def customBinary(image, thresh):
-    fn = lambda x :255 if x>thresh else 0
-    r = image.convert('L').point(fn, mode='1')
-    return r
+# def customBinary(image, thresh):
+#     fn = lambda x :255 if x>thresh else 0
+#     r = image.convert('L').point(fn, mode='1')
+#     return r
 
-def whichDigitAmI(name):
-    return name[int(name[7])]
+# def whichDigitAmI(name):
+#     return name[int(name[7])]
 
 def main():
     
@@ -95,19 +96,25 @@ def main():
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-    #SAVE CHECKPOINTS---------------------------------------------------
-    checkpoint_path = "training_1/cp.ckpt"
-    checkpoint_dir = os.path.dirname(checkpoint_path)
 
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+    # model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
+    #           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    #           metrics=['accuracy'])
 
+    model.summary()
+    img_file = './model_arch.png'
+    tf.keras.utils.plot_model(model, to_file=img_file, show_shapes=True, show_layer_names=True)
+   
     epochs=10
     history = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=epochs,
-        callbacks=[cp_callback]
+        use_multiprocessing=True
     )
+   
+   
+    model.save("my_model.h5")
 
     #result characteristics
     acc = history.history['accuracy']
@@ -132,24 +139,31 @@ def main():
     plt.title('Training and Validation Loss')
     plt.show()
 
-    #extra test - group of images outside main image set
+    pd.DataFrame(history.history).plot(figsize=(8, 5))
+    plt.grid(True)
+    plt.gca().set_ylim(0, 1)
+    plt.title('Training and Validation')
+    plt.show()
+
+
+    # #extra test - group of images outside main image set
     
-    for x in range(0, 7):
-        digit_path = 'check/0134152'+str(x)+'.png'
+    # for x in range(0, 7):
+    #     digit_path = 'check/0134152'+str(x)+'.png'
 
-        img = keras.preprocessing.image.load_img(
-            digit_path, target_size=(img_height, img_width)
-        )
-        img_array = keras.preprocessing.image.img_to_array(img)
-        img_array = tf.expand_dims(img_array, 0) # Create a batch
+    #     img = keras.preprocessing.image.load_img(
+    #         digit_path, target_size=(img_height, img_width)
+    #     )
+    #     img_array = keras.preprocessing.image.img_to_array(img)
+    #     img_array = tf.expand_dims(img_array, 0) # Create a batch
 
-        predictions = model.predict(img_array)
-        score = tf.nn.softmax(predictions[0])
+    #     predictions = model.predict(img_array)
+    #     score = tf.nn.softmax(predictions[0])
 
-        print(
-            "This image most likely belongs to {} with a {:.2f} percent confidence."
-            .format(class_names[np.argmax(score)], 100 * np.max(score))
-        )
+    #     print(
+    #         "This image most likely belongs to {} with a {:.2f} percent confidence."
+    #         .format(class_names[np.argmax(score)], 100 * np.max(score))
+    #     )
     
 if __name__ == '__main__':
     main()
